@@ -10,6 +10,29 @@ app.use(express.json());
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
+const { Pool } = require("pg");
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
+app.get("/api/init-db", async (req, res) => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS readings (
+        id SERIAL PRIMARY KEY,
+        device_id TEXT NOT NULL,
+        water_level_cm INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    res.send("Database initialized");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("DB init failed");
+  }
+});
+
 // Health check
 app.get("/", (req, res) => {
   res.send("Node backend is running");
