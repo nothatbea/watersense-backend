@@ -39,23 +39,38 @@ app.get("/", (req, res) => {
 });
 
 // Test API (ESP32 will hit this later)
-app.post("/api/ingest", (req, res) => {
-  console.log("Received:", req.body);
+app.post("/api/ingest", async (req, res) => {
+  const { device_id, water_level_cm } = req.body;
 
-  const payload = {
-    ...req.body,
-    received_at: new Date().toISOString()
-  };
+  if (!device_id || water_level_cm === undefined) {
+    return res.status(400).json({ error: "Invalid payload" });
+  }
 
-  // broadcast to WebSocket clients
-  wss.clients.forEach(client => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify(payload));
-    }
-  });
+  try {
+    // save to PostgreSQL
+    await pool.query(
+      "INSERT INTO readings (device_id, water_level_cm) VALUES ($1, $2)",
+      [device_id, water_level_cm]
+    );
 
-  // send ONE response
-  res.json({ success: true });
+    const payload = {
+      device_id,
+      water_level_cm,
+      received_at: new Date().toISOString()
+    };
+
+    // broadcast via WebSocket
+    wss.clients.forEach(client => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify(payload));
+      }
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("INGEST ERROR:", err);
+    res.status(500).json({ success: false });
+  }
 });
 
 
