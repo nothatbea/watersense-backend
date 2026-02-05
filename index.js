@@ -18,6 +18,8 @@ app.get("/", (req, res) => {
 // Test API (ESP32 will hit this later)
 app.post("/api/ingest", (req, res) => {
   console.log("Received:", req.body);
+  res.json({ success: true });
+
 
   // broadcast to WebSocket clients
   const payload = {
