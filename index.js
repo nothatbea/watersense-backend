@@ -18,23 +18,23 @@ app.get("/", (req, res) => {
 // Test API (ESP32 will hit this later)
 app.post("/api/ingest", (req, res) => {
   console.log("Received:", req.body);
-  res.json({ success: true });
 
-
-  // broadcast to WebSocket clients
   const payload = {
     ...req.body,
     received_at: new Date().toISOString()
   };
 
+  // broadcast to WebSocket clients
   wss.clients.forEach(client => {
     if (client.readyState === WebSocket.OPEN) {
       client.send(JSON.stringify(payload));
     }
   });
 
+  // send ONE response
   res.json({ success: true });
 });
+
 
 // WebSocket connections
 wss.on("connection", ws => {
