@@ -12,6 +12,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@influxdata/influxdb-client": "^1.35.0",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "pg": "^8.18.0",
