@@ -29,6 +29,9 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 app.get("/api/init-db", async (req, res) => {
+  if (process.env.NODE_ENV !== "development") {
+    return res.sendStatus(403);
+  }
   try {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
