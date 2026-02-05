@@ -77,6 +77,7 @@ app.post("/api/ingest", async (req, res) => {
   .timestamp(new Date());
 
 writeApi.writePoint(point);
+await writeApi.flush();
 
 
     // broadcast via WebSocket
