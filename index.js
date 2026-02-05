@@ -9,6 +9,18 @@ app.use(express.json());
 
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
+const { InfluxDB, Point } = require("@influxdata/influxdb-client");
+
+const influx = new InfluxDB({
+  url: process.env.INFLUX_URL,
+  token: process.env.INFLUX_TOKEN
+});
+
+const writeApi = influx.getWriteApi(
+  process.env.INFLUX_ORG,
+  process.env.INFLUX_BUCKET,
+  "ms"
+);
 
 const { Pool } = require("pg");
 
@@ -58,6 +70,14 @@ app.post("/api/ingest", async (req, res) => {
       water_level_cm,
       received_at: new Date().toISOString()
     };
+
+    const point = new Point("water_level")
+  .tag("device_id", device_id)
+  .floatField("value", water_level_cm)
+  .timestamp(new Date());
+
+writeApi.writePoint(point);
+
 
     // broadcast via WebSocket
     wss.clients.forEach(client => {
