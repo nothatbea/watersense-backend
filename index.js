@@ -289,7 +289,8 @@ app.post("/api/ingest", async (req, res) => {
     api_key,
     location_id,
     water_level,
-    battery
+    battery,
+    water_present = 0
   } = req.body;
 
   // ----------------- API KEY -----------------
@@ -314,11 +315,13 @@ app.post("/api/ingest", async (req, res) => {
   // ----------------- INFLUX WRITE -----------------
   try {
     const point = new Point("water_level")
-      .tag("location_id", location_id.toString())
-      .floatField("value", level)
-      .intField("battery", battery ?? 0)
-      .stringField("status", status)
-      .timestamp(new Date());
+  .tag("location_id", location_id.toString())
+  .floatField("value", level)
+  .intField("battery", battery ?? 0)
+  .intField("water_present", water_present ? 1 : 0)
+  .stringField("status", status)
+  .timestamp(new Date());
+
 
     writeApi.writePoint(point);
     await writeApi.flush();
